@@ -22,7 +22,7 @@ namespace SecureDesk_WCF_Service
     //This class uses the Percall Instance mode so each time the request will come new instance will be managed by the service
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
-    public class Service1 : RegistrationService
+    public class RegistrationServiceClass : RegistrationService
     {
         private  IFirebaseClient client = null;
 

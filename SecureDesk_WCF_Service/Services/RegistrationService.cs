@@ -23,7 +23,7 @@ namespace SecureDesk_WCF_Service
         void sendOTP(string email);
 
         [OperationContract]
-        bool verifyUser(string email, int OTp);
+        bool verifyUser(UserOtpVerification otpObj);
 
         [OperationContract]
         int getSecurePin(string email);
