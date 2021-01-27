@@ -15,11 +15,17 @@ namespace SecureDesk_WCF_Service
     {
 
         [OperationContract]
-        string connectToFirebase();
+        Boolean connectToFirebase();
 
-        
+        /*
         [OperationContract]
         UserOtpVerification registerNewUser(UserRegister user);
+        */
+        [OperationContract]
+        string populateQuestionTable();
+
+        [OperationContract]
+        string[] getQuestions();
 
         // TODO: Add your service operations here
     }
