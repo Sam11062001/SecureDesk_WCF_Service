@@ -22,7 +22,7 @@ namespace SecureDesk_WCF_Service
     //This class uses the Percall Instance mode so each time the request will come new instance will be managed by the service
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
-    public class RegistrationServiceClass : RegistrationService
+    public class Service1 : RegistrationService
     {
         private  IFirebaseClient client = null;
 
@@ -248,11 +248,11 @@ namespace SecureDesk_WCF_Service
             smtpClient.Send(mailMessage);
         }
 
-        public bool verifyUser(UserOtpVerification userOtpObj )
+        public OTP_Verified verifyUser(UserOtpVerification userOtpObj )
         {
             FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + userOtpObj.Email_Address);
             DBuserKeys user = response.ResultAs<DBuserKeys>();
-
+            OTP_Verified verification_status = new OTP_Verified();
             byte[] secretKey = Encoding.ASCII.GetBytes(user.UserSecretKey);
             var totp = new Totp(secretKey, step: 60);
             long timeStepMatched;
@@ -275,12 +275,12 @@ namespace SecureDesk_WCF_Service
 
                 FirebaseResponse response2 = client.Update("SecureDesk/User/" + userResult.EmailAddress, updatedUser);
                 User result = response2.ResultAs<User>();
+                verification_status.Verification_Result = true;
 
-
-                return true;
+                return verification_status;
             }
-
-            return false;
+            verification_status.Verification_Result = false;
+            return verification_status;
         }
         public int getSecurePin(string email)
         {
