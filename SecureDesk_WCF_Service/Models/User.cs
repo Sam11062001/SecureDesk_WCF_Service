@@ -22,7 +22,9 @@ namespace SecureDesk_WCF_Service.Models
 
         public string questionAnswered;
 
-        public Boolean verified; 
+        public Boolean verified;
+
+        public int securePin;
 
 
       

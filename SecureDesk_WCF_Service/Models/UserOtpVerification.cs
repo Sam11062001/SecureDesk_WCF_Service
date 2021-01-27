@@ -14,7 +14,7 @@ namespace SecureDesk_WCF_Service.Models
 
         private int otp;
         private string email_address;
-        private string message;
+       
 
         [MessageHeader(Name = "One Time Password for Verification")]
         public int OTP
@@ -31,12 +31,7 @@ namespace SecureDesk_WCF_Service.Models
         } 
 
 
-        [MessageBodyMember(Name ="Message")]
-        public string Message
-        { 
-            get; 
-            set; 
-        }
+        
 
     }
 }

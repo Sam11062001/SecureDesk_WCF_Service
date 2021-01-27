@@ -17,9 +17,19 @@ namespace SecureDesk_WCF_Service
         [OperationContract]
         string connectToFirebase();
 
-        
+
         [OperationContract]
-        UserOtpVerification registerNewUser(UserRegister user);
+        void registerNewUser(UserRegister user);
+
+        [OperationContract]
+        void sendOTP(string email);
+
+        [OperationContract]
+        bool verifyUser(string email, int OTp);
+
+        [OperationContract]
+        int getSecurePin(string email);
+
 
         // TODO: Add your service operations here
     }
