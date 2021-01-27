@@ -26,7 +26,7 @@ namespace SecureDesk_WCF_Service.Models
 
         public int securePin;
 
-
+        public string salt;
       
 
 
