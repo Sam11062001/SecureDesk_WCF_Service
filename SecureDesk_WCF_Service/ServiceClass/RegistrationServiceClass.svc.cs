@@ -9,7 +9,11 @@ using FireSharp.Config;
 using FireSharp.Interfaces;
 using FireSharp.Response;
 using SecureDesk_WCF_Service.Models;
+using OtpNet;
+using System.Net.Mail;
+using System.Security.Cryptography;
 using SecureDesk_WCF_Service.Algorithms;
+
 
 namespace SecureDesk_WCF_Service
 {
@@ -41,6 +45,7 @@ namespace SecureDesk_WCF_Service
             }
         }
 
+
         public string[] getQuestions()
         {
             //array that will return to the client for populating the security question field in the registration form
@@ -62,10 +67,10 @@ namespace SecureDesk_WCF_Service
                 for (int i = 0; i < 5; i++) {
 
                     //counter variable which should be start from 1 as the first question id in the database is 1
-                    string counter = (i + 1).ToString()
+                    string counter = (i + 1).ToString();
 
                     //get the response from the fire base database
-;                    response = client.Get("SecureDesk/Questions/" +counter);
+                  response = client.Get("SecureDesk/Questions/" +counter);
 
                     //convert the response as the Security_Question Model
                     question = response.ResultAs<Security_Question>();
@@ -146,10 +151,11 @@ namespace SecureDesk_WCF_Service
 
 
 
+
         //This method help to store the data in the Firebase and generates the Otp for the user for the user verification
-        public  UserOtpVerification registerNewUser(UserRegister user)
+        public  void registerNewUser(UserRegister user)
         {
-            UserOtpVerification otp = new UserOtpVerification();
+            //UserOtpVerification otp = new UserOtpVerification();
 
             string [] hash_password = Password.giveHashPassword(user.Password);
 
@@ -170,16 +176,148 @@ namespace SecureDesk_WCF_Service
             };
 
             //inserting the client data to the database
-            SetResponse response =  client.Set("SecureDesk/User/" + user.Email_Address, newUser);
-            var userResult = response.ResultAs<User>();
+            SetResponse response = client.Set("SecureDesk/User/" + user.Email_Address, newUser);
+            User userResult = response.ResultAs<User>();
 
+            //creating secret key of the user
+            string key = new string((newUser.EmailAddress + newUser.password).ToCharArray().OrderBy(x => Guid.NewGuid()).ToArray());
+            byte[] secretKey = Encoding.ASCII.GetBytes(key.Substring(0,7));
+
+            //inserting secret key to database
+            DBuserKeys userKey = new DBuserKeys();
+            userKey.Email_Address = newUser.EmailAddress;
+            userKey.UserSecretKey = Encoding.ASCII.GetString(secretKey);
+
+           
+            SetResponse response1 = client.Set("SecureDesk/UserKeys/" + userKey.Email_Address, userKey);
+            DBuserKeys userResult1 = response1.ResultAs<DBuserKeys>();
+
+            sendOTP(newUser.EmailAddress);
+
+            /*Creating otp and tempararily store it into the database
+            var TotpObj = new Totp(secretKey, step: 60);
+            var otpString = TotpObj.ComputeTotp();
+            otp.Email_Address = newUser.EmailAddress;
+            otp.OTP = int.Parse(otpString);
+
+            SetResponse response2 = client.Set("SecureDesk/UserOtps/" + userKey.Email_Address, otp);
+            UserOtpVerification userResult2 = response2.ResultAs<UserOtpVerification>();
+
+            
+             
+            //sending otp using email
+            MailMessage mailMessage = new MailMessage("desksecure7@gmail.com", "kamaniyash811@gmail.com");
+            mailMessage.Subject = "OTP for Secure Desk";
+            mailMessage.Body = "Otp code is : " + userResult2.OTP;
+
+            SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
+            smtpClient.Credentials = new System.Net.NetworkCredential()
+            {
+                UserName = "desksecure7@gmail.com",
+                Password = "SAURAVYASH1127"
+            };
+            smtpClient.EnableSsl = true;
+            smtpClient.Send(mailMessage);
+            */
+        }
+
+        public void sendOTP(string email)
+        {
+            FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + email);
+            DBuserKeys user = response.ResultAs<DBuserKeys>();
+
+            //Creating otp 
+            var TotpObj = new Totp(Encoding.ASCII.GetBytes(user.UserSecretKey), step: 60);
+            var otpString = TotpObj.ComputeTotp();
             
 
 
-            return otp;
+
+            //sending otp using email
+            MailMessage mailMessage = new MailMessage("desksecure7@gmail.com", email);
+            mailMessage.Subject = "OTP for Secure Desk";
+            mailMessage.Body = "Otp code is : " + otpString;
+
+            SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
+            smtpClient.Credentials = new System.Net.NetworkCredential()
+            {
+                UserName = "desksecure7@gmail.com",
+                Password = "SAURAVYASH1127"
+            };
+            smtpClient.EnableSsl = true ;
+            smtpClient.Send(mailMessage);
         }
 
+        public bool verifyUser(UserOtpVerification userOtpObj )
+        {
+            FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + userOtpObj.Email_Address);
+            DBuserKeys user = response.ResultAs<DBuserKeys>();
 
-        
+            byte[] secretKey = Encoding.ASCII.GetBytes(user.UserSecretKey);
+            var totp = new Totp(secretKey, step: 60);
+            long timeStepMatched;
+            bool otpValid = totp.VerifyTotp(userOtpObj.OTP.ToString(), out timeStepMatched, window: null);
+            if (otpValid)
+            {
+                FirebaseResponse response1 = client.Get("SecureDesk/User/" + userOtpObj.Email_Address);
+                User userResult = response1.ResultAs<User>();
+                User updatedUser = new User()
+                {
+                    EmailAddress = userResult.EmailAddress,
+                    firstName = userResult.firstName,
+                    lastName = userResult.lastName,
+                    dateOfBirth = userResult.dateOfBirth,
+                    questionSelected = userResult.questionSelected,
+                    questionAnswered = userResult.questionAnswered,
+                    password = userResult.password,
+                    verified = true
+                };
+
+                FirebaseResponse response2 = client.Update("SecureDesk/User/" + userResult.EmailAddress, updatedUser);
+                User result = response2.ResultAs<User>();
+
+
+                return true;
+            }
+
+            return false;
+        }
+        public int getSecurePin(string email)
+        {
+            int SecurePin;
+            while (true)
+            {
+                var cryptoRng = new RNGCryptoServiceProvider();
+                byte[] buffer = new byte[sizeof(UInt64)];
+                cryptoRng.GetBytes(buffer);
+                var num = BitConverter.ToUInt64(buffer, 0);
+                var pin = num % 1000000; 
+                if (pin > 99999)
+                {
+                    SecurePin = Convert.ToInt32(pin);
+                    break;
+                }
+            }
+            FirebaseResponse response1 = client.Get("SecureDesk/User/" + email);
+            User userResult = response1.ResultAs<User>();
+            User updatedUser = new User()
+            {
+                EmailAddress = userResult.EmailAddress,
+                firstName = userResult.firstName,
+                lastName = userResult.lastName,
+                dateOfBirth = userResult.dateOfBirth,
+                questionSelected = userResult.questionSelected,
+                questionAnswered = userResult.questionAnswered,
+                password = userResult.password,
+                verified = true,
+                securePin = SecurePin
+            };
+
+            FirebaseResponse response2 = client.Update("SecureDesk/User/" + userResult.EmailAddress, updatedUser);
+            User result = response2.ResultAs<User>();
+
+            return SecurePin;
+        }
+
     }
 }

@@ -24,6 +24,8 @@ namespace SecureDesk_WCF_Service.Models
 
         public Boolean verified;
 
+        public int securePin;
+
         public string salt;
       
 
