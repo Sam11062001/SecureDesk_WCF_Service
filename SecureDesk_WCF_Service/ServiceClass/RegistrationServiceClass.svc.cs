@@ -153,10 +153,12 @@ namespace SecureDesk_WCF_Service
 
 
         //This method help to store the data in the Firebase and generates the Otp for the user for the user verification
-        public  void registerNewUser(UserRegister user)
+        public async  void  registerNewUser(UserRegister user)
         {
             //UserOtpVerification otp = new UserOtpVerification();
-
+            Boolean connectionResult = connectToFirebase();
+            Firebase_Configuration config = new Firebase_Configuration();
+            IFirebaseClient client1 = config.Configure();
             string [] hash_password = Password.giveHashPassword(user.Password);
 
             //Creating the User Instance for the persistance of the user data in the database 
@@ -175,59 +177,39 @@ namespace SecureDesk_WCF_Service
                 verified = false
             };
 
+            
             //inserting the client data to the database
-            SetResponse response = client.Set("SecureDesk/User/" + user.Email_Address, newUser);
+            PushResponse response = await client1.PushTaskAsync<User>("SecureDesk/Users/", newUser);
+            
+            
+            
             User userResult = response.ResultAs<User>();
-
+            string user_id = response.Result.Name;
+            int i = 0;
+            
             //creating secret key of the user
             string key = new string((newUser.EmailAddress + newUser.password).ToCharArray().OrderBy(x => Guid.NewGuid()).ToArray());
-            byte[] secretKey = Encoding.ASCII.GetBytes(key.Substring(0,7));
-
             //inserting secret key to database
             DBuserKeys userKey = new DBuserKeys();
             userKey.Email_Address = newUser.EmailAddress;
-            userKey.UserSecretKey = Encoding.ASCII.GetString(secretKey);
+            userKey.UserSecretKey = key;
 
            
-            SetResponse response1 = client.Set("SecureDesk/UserKeys/" + userKey.Email_Address, userKey);
+            SetResponse response1 = client1.Set("SecureDesk/UserKeys/" + userKey.Email_Address, userKey);
             DBuserKeys userResult1 = response1.ResultAs<DBuserKeys>();
 
             sendOTP(newUser.EmailAddress);
-
-            /*Creating otp and tempararily store it into the database
-            var TotpObj = new Totp(secretKey, step: 60);
-            var otpString = TotpObj.ComputeTotp();
-            otp.Email_Address = newUser.EmailAddress;
-            otp.OTP = int.Parse(otpString);
-
-            SetResponse response2 = client.Set("SecureDesk/UserOtps/" + userKey.Email_Address, otp);
-            UserOtpVerification userResult2 = response2.ResultAs<UserOtpVerification>();
-
             
-             
-            //sending otp using email
-            MailMessage mailMessage = new MailMessage("desksecure7@gmail.com", "kamaniyash811@gmail.com");
-            mailMessage.Subject = "OTP for Secure Desk";
-            mailMessage.Body = "Otp code is : " + userResult2.OTP;
-
-            SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
-            smtpClient.Credentials = new System.Net.NetworkCredential()
-            {
-                UserName = "desksecure7@gmail.com",
-                Password = "SAURAVYASH1127"
-            };
-            smtpClient.EnableSsl = true;
-            smtpClient.Send(mailMessage);
-            */
+           
         }
 
         public void sendOTP(string email)
         {
             FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + email);
             DBuserKeys user = response.ResultAs<DBuserKeys>();
-
+             var bytes= Base32Encoding.ToBytes(user.UserSecretKey);
             //Creating otp 
-            var TotpObj = new Totp(Encoding.ASCII.GetBytes(user.UserSecretKey), step: 60);
+            var TotpObj = new Totp(bytes, step: 60);
             var otpString = TotpObj.ComputeTotp();
             
 
@@ -253,8 +235,8 @@ namespace SecureDesk_WCF_Service
             FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + userOtpObj.Email_Address);
             DBuserKeys user = response.ResultAs<DBuserKeys>();
             OTP_Verified verification_status = new OTP_Verified();
-            byte[] secretKey = Encoding.ASCII.GetBytes(user.UserSecretKey);
-            var totp = new Totp(secretKey, step: 60);
+            var bytes = Base32Encoding.ToBytes(user.UserSecretKey);
+            var totp = new Totp(bytes, step: 60);
             long timeStepMatched;
             bool otpValid = totp.VerifyTotp(userOtpObj.OTP.ToString(), out timeStepMatched, window: null);
             if (otpValid)

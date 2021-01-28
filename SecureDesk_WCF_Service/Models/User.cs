@@ -8,25 +8,25 @@ namespace SecureDesk_WCF_Service.Models
     //Will be stored to database directly 
     public class User
     {
-        public string EmailAddress;
+        public string EmailAddress { get; set; }
 
-        public string firstName;
+        public string firstName { get; set; }
 
-        public string lastName;
+        public string lastName { get; set; }
 
-        public string dateOfBirth;
+        public string dateOfBirth { get; set; }
 
-        public string password;
+        public string password { get; set; }
 
-        public int questionSelected;
+        public int questionSelected { get; set; }
 
-        public string questionAnswered;
+        public string questionAnswered { get; set; }
 
-        public Boolean verified;
+        public Boolean verified { get; set; }
 
-        public int securePin;
+        public int securePin { get; set; }
 
-        public string salt;
+        public string salt { get; set; }
       
 
 

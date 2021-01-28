@@ -22,50 +22,50 @@ namespace SecureDesk_WCF_Service.Models
         [DataMember]
         public string Email_Address
         {
-            get;
-            set;
+            get { return email_address; }
+            set { email_address = value; }
         }
 
         [DataMember]
         public string First_Name
         {
-            get;
-            set;
+            get { return first_name; }
+            set { first_name = value; }
         }
 
         [DataMember]
         public string Last_Name
         {
-            get;
-            set;
+            get { return last_name; }
+            set { last_name = value; }
         }
 
         [DataMember]
         public string Date_Of_Birth
         {
-            get;
-            set;
+            get { return dob; }
+            set { dob = value; }
         }
 
         [DataMember]
         public int Question_Number_Selected
         {
-            get;
-            set;
+            get { return question_number; }
+            set { question_number = value; }
         }
 
         [DataMember]
         public string Question_Answered
         {
-            get;
-            set;
+            get { return question_answered; }
+            set { question_answered = value; }
         }
 
         [DataMember]
         public string Password
         {
-            get;
-            set;
+            get { return password; }
+            set { password = value; }
         }
 
     }
