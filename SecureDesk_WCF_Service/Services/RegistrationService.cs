@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SecureDesk_WCF_Service
 {
@@ -23,16 +24,16 @@ namespace SecureDesk_WCF_Service
         void sendOTP(string email);
 
         [OperationContract]
-        OTP_Verified verifyUser(UserOtpVerification otpObj);
+        Task<OTP_Verified> verifyUser(UserOtpVerification otpObj);
 
         [OperationContract]
-        int getSecurePin(string email);
+        Task<int> getSecurePin(string email);
+
+        /*[OperationContract]
+        string populateQuestionTable();*/
 
         [OperationContract]
-        string populateQuestionTable();
-
-        [OperationContract]
-        string[] getQuestions();
+        Task<string[]> getQuestions();
 
 
         // TODO: Add your service operations here

@@ -13,7 +13,8 @@ using OtpNet;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using SecureDesk_WCF_Service.Algorithms;
-
+using Google.Cloud.Firestore;
+using System.Threading.Tasks;
 
 namespace SecureDesk_WCF_Service
 {
@@ -24,30 +25,62 @@ namespace SecureDesk_WCF_Service
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     public class Service1 : RegistrationService
     {
-        private  IFirebaseClient client = null;
-
+        //private  IFirebaseClient client = null;
+        FirestoreDb db;
         //Method use to connec to the FireBase Database
         public Boolean connectToFirebase()
         {
             //creating the instance of the Firebase_Configuration Class to connect to the Firebase Database 
 
-            Firebase_Configuration configuration = new Firebase_Configuration();
-             client=configuration.Configure();
+            /* Firebase_Configuration configuration = new Firebase_Configuration();
+              client=configuration.Configure();
 
-            //check whether the connection is sucessfull or not
-            if (client != null)
-            {
+             //check whether the connection is sucessfull or not
+             if (client != null)
+             {
+                 return true;
+             }
+             else
+             {
+                 return false;
+             }*/
+            string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",path);
+
+            db = FirestoreDb.Create("deskcloud-155bf");
+            if (db != null)
                 return true;
-            }
             else
-            {
                 return false;
-            }
         }
 
-
-        public string[] getQuestions()
+        
+        public async Task<string[]> getQuestions()
         {
+            Boolean connectionResult = connectToFirebase();
+
+            
+            Query queryRef = db.Collection("Questions");
+            QuerySnapshot snaps = await queryRef.GetSnapshotAsync();
+
+            int cntQues = 0;
+            foreach (DocumentSnapshot snap in snaps)
+            {
+                cntQues++;
+            }
+            string[] questions = new string[cntQues];
+
+            int i = 0;
+            foreach( DocumentSnapshot snap in snaps )
+            {
+                DBQuestions questionObj = snap.ConvertTo<DBQuestions>();
+                questions[i] = questionObj.question;
+                i++;
+            }
+
+            return questions;
+
+            /*
             //array that will return to the client for populating the security question field in the registration form
             string[] returnSecurityQuestion = new string[5];
 
@@ -83,12 +116,12 @@ namespace SecureDesk_WCF_Service
             }
             {
                 return null;  //else return null that means the connection to the database was not successfull
-            }
+            }*/
 
         }
 
         //This method populate the question table in the firebase SecureDesk database should be used only when any nnew question are required to be added in the database
-        public string populateQuestionTable()
+        /*public string populateQuestionTable()
         {
             //connec to the firebase database
             Boolean returnResult = connectToFirebase();
@@ -148,23 +181,41 @@ namespace SecureDesk_WCF_Service
             //return the success message 
             return "Succesfully added the question";
         }//end of the method implementation
-
+        */
 
 
 
         //This method help to store the data in the Firebase and generates the Otp for the user for the user verification
-        public async  void  registerNewUser(UserRegister user)
+        public  async  void  registerNewUser(UserRegister user)
         {
             //UserOtpVerification otp = new UserOtpVerification();
             Boolean connectionResult = connectToFirebase();
-            Firebase_Configuration config = new Firebase_Configuration();
-            IFirebaseClient client1 = config.Configure();
+            
+            /*Firebase_Configuration config = new Firebase_Configuration();
+            IFirebaseClient client1 = config.Configure();*/
+            
             string [] hash_password = Password.giveHashPassword(user.Password);
 
             //Creating the User Instance for the persistance of the user data in the database 
             //user is the object which contains the information retrieved by the user windows application
 
-            User newUser = new User()
+            DocumentReference doc1 = db.Collection("User").Document(user.Email_Address);
+            Dictionary<string, object> data1 = new Dictionary<string, object>()
+            {
+                { "email" , user.Email_Address },
+                { "firstName" , user.First_Name },
+                { "lastName" , user.Last_Name },
+                { "dateOfBirth" , user.Date_Of_Birth },
+                { "password" , hash_password[1] },
+                { "questionSelected" , user.Question_Number_Selected },
+                { "questionAnswered" , user.Question_Answered },
+                { "salt" , hash_password[0] },
+                { "verified" , false },
+
+            };
+            doc1.SetAsync(data1);
+
+            /*User newUser = new User()
             {
                 EmailAddress = user.Email_Address,
                 firstName = user.First_Name,
@@ -185,29 +236,48 @@ namespace SecureDesk_WCF_Service
             
             User userResult = response.ResultAs<User>();
             string user_id = response.Result.Name;
-            int i = 0;
+            */
             
             //creating secret key of the user
-            string key = new string((newUser.EmailAddress + newUser.password).ToCharArray().OrderBy(x => Guid.NewGuid()).ToArray());
+            string key = new string((user.Email_Address + user.Password).ToCharArray().OrderBy(x => Guid.NewGuid()).ToArray());
             //inserting secret key to database
-            DBuserKeys userKey = new DBuserKeys();
+
+            DocumentReference doc2 = db.Collection("UserKeys").Document(user.Email_Address);
+            Dictionary<string, object> data2 = new Dictionary<string, object>()
+            {
+                { "email" , user.Email_Address },
+                { "userKey" , key },
+
+            };
+            doc2.SetAsync(data2);
+
+            /*DBuserKeys userKey = new DBuserKeys();
             userKey.Email_Address = newUser.EmailAddress;
             userKey.UserSecretKey = key;
 
            
             SetResponse response1 = client1.Set("SecureDesk/UserKeys/" + userKey.Email_Address, userKey);
-            DBuserKeys userResult1 = response1.ResultAs<DBuserKeys>();
+            DBuserKeys userResult1 = response1.ResultAs<DBuserKeys>();*/
 
-            sendOTP(newUser.EmailAddress);
+            sendOTP(user.Email_Address);
             
            
         }
 
-        public void sendOTP(string email)
+        public async void sendOTP(string email)
         {
-            FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + email);
-            DBuserKeys user = response.ResultAs<DBuserKeys>();
-             var bytes= Base32Encoding.ToBytes(user.UserSecretKey);
+
+            Boolean connectionResult = connectToFirebase();
+            DocumentReference docRef1 = db.Collection("UserKeys").Document(email);
+            DocumentSnapshot docSnap1 = await docRef1.GetSnapshotAsync();
+
+            DBUserKeys DBuserKeyObj = docSnap1.ConvertTo<DBUserKeys>();
+            
+
+            /*FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + email);
+            userKeys user = response.ResultAs<userKeys>();*/
+
+            var bytes= Base32Encoding.ToBytes(DBuserKeyObj.userKey);
             //Creating otp 
             var TotpObj = new Totp(bytes, step: 60);
             var otpString = TotpObj.ComputeTotp();
@@ -230,18 +300,33 @@ namespace SecureDesk_WCF_Service
             smtpClient.Send(mailMessage);
         }
 
-        public OTP_Verified verifyUser(UserOtpVerification userOtpObj )
+        public async Task<OTP_Verified> verifyUser(UserOtpVerification userOtpObj )
         {
-            FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + userOtpObj.Email_Address);
-            DBuserKeys user = response.ResultAs<DBuserKeys>();
+            DocumentReference docRef1 = db.Collection("UserKeys").Document(userOtpObj.Email_Address);
+            DocumentSnapshot docSnap1 = await docRef1.GetSnapshotAsync();
+
+            DBUserKeys DBuserKeyObj = docSnap1.ConvertTo<DBUserKeys>();
+
+            /*FirebaseResponse response = client.Get("SecureDesk/UserKeys/" + userOtpObj.Email_Address);
+            userKeys user = response.ResultAs<userKeys>();*/
+            
             OTP_Verified verification_status = new OTP_Verified();
-            var bytes = Base32Encoding.ToBytes(user.UserSecretKey);
+            var bytes = Base32Encoding.ToBytes(DBuserKeyObj.userKey);
             var totp = new Totp(bytes, step: 60);
             long timeStepMatched;
             bool otpValid = totp.VerifyTotp(userOtpObj.OTP.ToString(), out timeStepMatched, window: null);
             if (otpValid)
             {
-                FirebaseResponse response1 = client.Get("SecureDesk/User/" + userOtpObj.Email_Address);
+                DocumentReference docRef2 = db.Collection("User").Document(DBuserKeyObj.email);
+                Dictionary<string, object> data2 = new Dictionary<string, object>()
+                {
+                    { "verified" , true },
+
+                };
+                //DocumentSnapshot docSnap2 = await docRef2.GetSnapshotAsync();
+                await docRef2.UpdateAsync(data2);
+
+                /*FirebaseResponse response1 = client.Get("SecureDesk/User/" + userOtpObj.Email_Address);
                 User userResult = response1.ResultAs<User>();
                 User updatedUser = new User()
                 {
@@ -256,7 +341,7 @@ namespace SecureDesk_WCF_Service
                 };
 
                 FirebaseResponse response2 = client.Update("SecureDesk/User/" + userResult.EmailAddress, updatedUser);
-                User result = response2.ResultAs<User>();
+                User result = response2.ResultAs<User>();*/
                 verification_status.Verification_Result = true;
 
                 return verification_status;
@@ -264,7 +349,7 @@ namespace SecureDesk_WCF_Service
             verification_status.Verification_Result = false;
             return verification_status;
         }
-        public int getSecurePin(string email)
+        public async Task<int> getSecurePin(string email)
         {
             int SecurePin;
             while (true)
@@ -280,7 +365,17 @@ namespace SecureDesk_WCF_Service
                     break;
                 }
             }
-            FirebaseResponse response1 = client.Get("SecureDesk/User/" + email);
+
+            DocumentReference docRef1 = db.Collection("User").Document(email);
+            Dictionary<string, object> data1 = new Dictionary<string, object>()
+                {
+                    { "securePin" , SecurePin },
+
+                };
+            //DocumentSnapshot docSnap2 = await docRef2.GetSnapshotAsync();
+            await docRef1.UpdateAsync(data1);
+
+            /*FirebaseResponse response1 = client.Get("SecureDesk/User/" + email);
             User userResult = response1.ResultAs<User>();
             User updatedUser = new User()
             {
@@ -296,7 +391,7 @@ namespace SecureDesk_WCF_Service
             };
 
             FirebaseResponse response2 = client.Update("SecureDesk/User/" + userResult.EmailAddress, updatedUser);
-            User result = response2.ResultAs<User>();
+            User result = response2.ResultAs<User>();*/
 
             return SecurePin;
         }
