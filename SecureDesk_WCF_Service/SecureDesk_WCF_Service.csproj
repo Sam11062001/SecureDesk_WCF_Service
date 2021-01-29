@@ -156,11 +156,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ServiceClass\RegistrationServiceClass.svc" />
+    <Content Include="ServiceClass\AuthService.svc" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Algorithms\Firebase_Configuration.cs" />
     <Compile Include="Algorithms\Password.cs" />
+    <Compile Include="Models\AuthUser.cs" />
     <Compile Include="Models\DBQuestions.cs" />
     <Compile Include="Models\DBUserKeys.cs" />
     <Compile Include="Models\userKeys.cs" />
@@ -173,6 +175,10 @@
     <Compile Include="ServiceClass\RegistrationServiceClass.svc.cs">
       <DependentUpon>RegistrationServiceClass.svc</DependentUpon>
     </Compile>
+    <Compile Include="ServiceClass\AuthService.svc.cs">
+      <DependentUpon>AuthService.svc</DependentUpon>
+    </Compile>
+    <Compile Include="Services\IAuthService.cs" />
     <Compile Include="Services\RegistrationService.cs" />
   </ItemGroup>
   <ItemGroup>

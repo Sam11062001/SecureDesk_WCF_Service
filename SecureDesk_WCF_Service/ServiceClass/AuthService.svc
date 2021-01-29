@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Service="SecureDesk_WCF_Service.Services.AuthService" CodeBehind="AuthService.svc.cs" %>
