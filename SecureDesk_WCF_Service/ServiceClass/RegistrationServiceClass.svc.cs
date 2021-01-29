@@ -103,7 +103,7 @@ namespace SecureDesk_WCF_Service
                 { "verified" , false },
 
             };
-            doc1.SetAsync(data1);
+            await doc1.SetAsync(data1);
 
             
             
@@ -118,7 +118,7 @@ namespace SecureDesk_WCF_Service
                 { "userKey" , key },
 
             };
-            doc2.SetAsync(data2);
+            await doc2.SetAsync(data2);
 
             
 
@@ -142,7 +142,7 @@ namespace SecureDesk_WCF_Service
             var bytes = Encoding.ASCII.GetBytes(DBuserKeyObj.userKey);
 
             //Creating otp 
-            var TotpObj = new Totp(bytes, step: 240);
+            var TotpObj = new Totp(bytes, step: 120);
             var otpString = TotpObj.ComputeTotp();
             
 
@@ -175,7 +175,7 @@ namespace SecureDesk_WCF_Service
             
             OTP_Verified verification_status = new OTP_Verified();
             var bytes = Encoding.ASCII.GetBytes(DBuserKeyObj.userKey);
-            var totp = new Totp(bytes, step: 240);
+            var totp = new Totp(bytes, step: 120);
             long timeStepMatched;
             bool otpValid = totp.VerifyTotp(userOtpObj.OTP.ToString(), out timeStepMatched, window: null);
             if (otpValid)
