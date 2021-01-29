@@ -15,6 +15,9 @@ namespace SecureDesk_WCF_Service
     public interface RegistrationService
     {
         [OperationContract]
+        Task<string[]> getQuestions();
+
+        [OperationContract]
         Boolean connectToFirebase();
 
         [OperationContract]
@@ -29,13 +32,14 @@ namespace SecureDesk_WCF_Service
         [OperationContract]
         Task<int> getSecurePin(string email);
 
-        /*[OperationContract]
-        string populateQuestionTable();*/
+        [OperationContract]
+        Task<string> getUserQuestion(string email);
 
         [OperationContract]
-        Task<string[]> getQuestions();
+        Task<Boolean> verifyAnswer(string email , string userAnswer);
 
-
+        [OperationContract]
+        void resetPassword(string email, string newPassword);
         // TODO: Add your service operations here
     }
 
