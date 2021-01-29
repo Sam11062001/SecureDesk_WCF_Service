@@ -7,12 +7,12 @@ using Google.Cloud.Firestore;
 namespace SecureDesk_WCF_Service.Models
 {
     [FirestoreData]
-    public class DBUserKeys
+    public class DBQuestions
     {
         [FirestoreProperty]
-        public string email { get; set; }
+        public int id { get; set; }
 
         [FirestoreProperty]
-        public string userKey { get; set; }
+        public string question { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SecureDesk_WCF_Service
 {
@@ -13,6 +14,9 @@ namespace SecureDesk_WCF_Service
     [ServiceContract]
     public interface RegistrationService
     {
+        [OperationContract]
+        Task<string[]> getQuestions();
+
         [OperationContract]
         Boolean connectToFirebase();
 
@@ -23,18 +27,19 @@ namespace SecureDesk_WCF_Service
         void sendOTP(string email);
 
         [OperationContract]
-        OTP_Verified verifyUser(UserOtpVerification otpObj);
+        Task<OTP_Verified> verifyUser(UserOtpVerification otpObj);
 
         [OperationContract]
-        int getSecurePin(string email);
+        Task<int> getSecurePin(string email);
 
         [OperationContract]
-        string populateQuestionTable();
+        Task<string> getUserQuestion(string email);
 
         [OperationContract]
-        string[] getQuestions();
+        Task<Boolean> verifyAnswer(string email , string userAnswer);
 
-
+        [OperationContract]
+        void resetPassword(string email, string newPassword);
         // TODO: Add your service operations here
     }
 
