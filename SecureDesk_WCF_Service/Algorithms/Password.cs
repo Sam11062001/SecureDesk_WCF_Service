@@ -17,14 +17,15 @@ namespace SecureDesk_WCF_Service.Algorithms
          * 2:Hash the password using the SHA512
          * 3:Hash the password using the Bcrypt library
          */
+
         public static string [] giveHashPassword(string password)
         {
             //this array the contains the hashed password and the salt for the user
             string[] passwordHash_Salt = new string[2];
-            string salt = generateSalt(7);                                           //get the salt for adding it to the password
-            string pepper = "VIa2MxZu9A==";                                          //pepper used for adding to to the password+salt for the seceracy
-            string hashed_password = generateSHA512Hash(password, salt, pepper);     //hashing the password by using the SHA512 algorithm
-            string bcrypt_hash_password = Bcrpyt_Password(hashed_password);          //hashing the password using the Bcrypt 
+            string salt = generateSalt(7);                                                                                                              //get the salt for adding it to the password
+            string pepper = System.Configuration.ConfigurationManager.AppSettings["SecureDeskPasswordPepper"];                                          //pepper used for adding to to the password+salt for the seceracy
+            string hashed_password = generateSHA512Hash(password, salt, pepper);                                                                        //hashing the password by using the SHA512 algorithm
+            string bcrypt_hash_password = Bcrpyt_Password(hashed_password);                                                                             //hashing the password using the Bcrypt 
             passwordHash_Salt[0] = salt;                                         
             passwordHash_Salt[1] = bcrypt_hash_password;
 
@@ -86,7 +87,7 @@ namespace SecureDesk_WCF_Service.Algorithms
                 cost -= 1;
             }
             while ((timeTaken) >= timeTarget);
-            Console.WriteLine("Appropriate Cost Found: " + (cost + 1));
+            
             return bcrypt_hash;
         }
     }
