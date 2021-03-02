@@ -18,10 +18,11 @@ namespace SecureDesk_WCF_Service.Services
     // NOTE: In order to launch WCF Test Client for testing this service, please select DocumentService.svc or DocumentService.svc.cs at the Solution Explorer and start debugging.
     public class DocumentService : IDocumentService
     {
-        private static string apiKey = "AIzaSyC5IUVt3l3rShryC0dWZ5xeyw-iqj0Yfto";
-        private static string bucket = "deskcloud-155bf.appspot.com";
-        private static string authEmail = "kamaniyash811@gmail.com";
-        private static string authPassword = "Yash@9274";
+        //getting the configuration from the azure app Configuration
+        private static string apiKey = System.Configuration.ConfigurationManager.AppSettings["FirestoreApiKey"];
+        private static string bucket = System.Configuration.ConfigurationManager.AppSettings["FirestoreBucketKey"];
+        private static string authEmail = System.Configuration.ConfigurationManager.AppSettings["FirestoreAuthenticationEmailAddress"];
+        private static string authPassword = System.Configuration.ConfigurationManager.AppSettings["FirestoreAuthenticationPassword"];
         string link;
         FileStream fs;
 

@@ -27,7 +27,7 @@ namespace SecureDesk_WCF_Service.Services
         public async Task<bool> validateLogin(AuthUser authUser)
         {
             bool auth_result = false;
-            string pepper = "VIa2MxZu9A==";
+            string pepper = System.Configuration.ConfigurationManager.AppSettings["SecureDeskPasswordPepper"];
 
             //if the database connection is successfull
             if (database_configuration != null)

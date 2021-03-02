@@ -15,30 +15,39 @@ namespace SecureDesk_WCF_Service
     public interface RegistrationService
     {
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Task<string[]> getQuestions();
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Boolean connectToFirebase();
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         void registerNewUser(UserRegister user);
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         void sendOTP(string email);
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Task<OTP_Verified> verifyUser(UserOtpVerification otpObj);
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Task<int> getSecurePin(string email);
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Task<string> getUserQuestion(string email);
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Task<Boolean> verifyAnswer(string email , string userAnswer);
 
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         void resetPassword(string email, string newPassword);
         // TODO: Add your service operations here
     }

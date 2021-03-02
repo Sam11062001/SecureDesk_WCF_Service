@@ -10,7 +10,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Firebase.Storage;
+
 using System.Net;
 using SecureDesk_WCF_Service.Models;
 
@@ -20,10 +20,11 @@ namespace SecureDesk_WCF_Service.Services
     // NOTE: In order to launch WCF Test Client for testing this service, please select PersonalDiary.svc or PersonalDiary.svc.cs at the Solution Explorer and start debugging.
     public class PersonalDiary : IPersonalDiary
     {
-        private static string apiKey = "AIzaSyC5IUVt3l3rShryC0dWZ5xeyw-iqj0Yfto";
-        private static string bucket = "deskcloud-155bf.appspot.com";
-        private static string authEmail = "kamaniyash811@gmail.com";
-        private static string authPassword = "Yash@9274";
+        //getting the configuration from the azure app Configuration
+        private static string apiKey = System.Configuration.ConfigurationManager.AppSettings["FirestoreApiKey"];
+        private static string bucket = System.Configuration.ConfigurationManager.AppSettings["FirestoreBucketKey"];
+        private static string authEmail = System.Configuration.ConfigurationManager.AppSettings["FirestoreAuthenticationEmailAddress"];
+        private static string authPassword = System.Configuration.ConfigurationManager.AppSettings["FirestoreAuthenticationPassword"];
         string link;
         FileStream fs;
 
@@ -59,7 +60,7 @@ namespace SecureDesk_WCF_Service.Services
             db = FirestoreDb.Create("deskcloud-155bf");
             if (db != null)
                 return true;
-            else
+            else 
                 return false;
         }
 
@@ -93,7 +94,7 @@ namespace SecureDesk_WCF_Service.Services
 
         }
 
-        public async void getDiary(string link )
+        public  void getDiary(string link )
         {
             
 
