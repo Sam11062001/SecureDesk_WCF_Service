@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using SecureDesk_WCF_Service.Algorithms;
 using Google.Cloud.Firestore;
 using System.Threading.Tasks;
+using SecureDesk_WCF_Service.Algorithms;
 
 namespace SecureDesk_WCF_Service
 {
@@ -25,16 +26,16 @@ namespace SecureDesk_WCF_Service
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     public class Service1 : RegistrationService
     {
-        
+
         FirestoreDb db;
         //Method use to connec to the FireBase Database
         public Boolean connectToFirebase()
         {
             //creating the instance of the Firebase_Configuration Class to connect to the Firebase Database 
 
-            
+
             string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
-            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",path);
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
             db = FirestoreDb.Create("deskcloud-155bf");
             if (db != null)
@@ -43,12 +44,12 @@ namespace SecureDesk_WCF_Service
                 return false;
         }
 
-        
+
         public async Task<string[]> getQuestions()
         {
             Boolean connectionResult = connectToFirebase();
 
-            
+
             Query queryRef = db.Collection("Questions");
             QuerySnapshot snaps = await queryRef.GetSnapshotAsync();
 
@@ -60,7 +61,7 @@ namespace SecureDesk_WCF_Service
             string[] questions = new string[cntQues];
 
             int i = 0;
-            foreach( DocumentSnapshot snap in snaps )
+            foreach (DocumentSnapshot snap in snaps)
             {
                 DBQuestions questionObj = snap.ConvertTo<DBQuestions>();
                 questions[i] = questionObj.question;
@@ -69,22 +70,22 @@ namespace SecureDesk_WCF_Service
 
             return questions;
 
-            
+
 
         }
 
-        
+
 
 
 
         //This method help to store the data in the Firebase and generates the Otp for the user for the user verification
-        public  async  void  registerNewUser(UserRegister user)
+        public async void registerNewUser(UserRegister user)
         {
-            
+
             Boolean connectionResult = connectToFirebase();
-            
-            
-            string [] hash_password = Password.giveHashPassword(user.Password);
+
+
+            string[] hash_password = Password.giveHashPassword(user.Password);
 
             //Creating the User Instance for the persistance of the user data in the database 
             //user is the object which contains the information retrieved by the user windows application
@@ -105,8 +106,8 @@ namespace SecureDesk_WCF_Service
             };
             await doc1.SetAsync(data1);
 
-            
-            
+
+
             //creating secret key of the user
             string key = new string((user.Email_Address + user.Password).ToCharArray().OrderBy(x => Guid.NewGuid()).ToArray());
             //inserting secret key to database
@@ -120,11 +121,11 @@ namespace SecureDesk_WCF_Service
             };
             await doc2.SetAsync(data2);
 
-            
+
 
             sendOTP(user.Email_Address);
-            
-           
+
+
         }
 
         public async void sendOTP(string email)
@@ -137,33 +138,34 @@ namespace SecureDesk_WCF_Service
             DBUserKeys DBuserKeyObj = docSnap1.ConvertTo<DBUserKeys>();
 
 
-            
+
             //var bytes= Base32Encoding.ToBytes(DBuserKeyObj.userKey);
             var bytes = Encoding.ASCII.GetBytes(DBuserKeyObj.userKey);
 
             //Creating otp 
             var TotpObj = new Totp(bytes, step: 120);
             var otpString = TotpObj.ComputeTotp();
-            
+
 
 
 
             //sending otp using email
-            MailMessage mailMessage = new MailMessage("desksecure7@gmail.com", email);
+            string emailAddress = System.Configuration.ConfigurationManager.AppSettings["SecureDeskEmailAddress"];
+            MailMessage mailMessage = new MailMessage(emailAddress, email);
             mailMessage.Subject = "OTP for Secure Desk";
             mailMessage.Body = "Otp code is : " + otpString;
 
             SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
             smtpClient.Credentials = new System.Net.NetworkCredential()
             {
-                UserName = "desksecure7@gmail.com",
-                Password = "SAURAVYASH1127"
+                UserName = System.Configuration.ConfigurationManager.AppSettings["SecureDeskEmailAddress"],
+                Password = System.Configuration.ConfigurationManager.AppSettings["SecureDeskEmailPassword"]
             };
-            smtpClient.EnableSsl = true ;
+            smtpClient.EnableSsl = true;
             smtpClient.Send(mailMessage);
         }
 
-        public async Task<OTP_Verified> verifyUser(UserOtpVerification userOtpObj )
+        public async Task<OTP_Verified> verifyUser(UserOtpVerification userOtpObj)
         {
             Boolean connectionResult = connectToFirebase();
             DocumentReference docRef1 = db.Collection("UserKeys").Document(userOtpObj.Email_Address);
@@ -171,8 +173,8 @@ namespace SecureDesk_WCF_Service
 
             DBUserKeys DBuserKeyObj = docSnap1.ConvertTo<DBUserKeys>();
 
-            
-            
+
+
             OTP_Verified verification_status = new OTP_Verified();
             var bytes = Encoding.ASCII.GetBytes(DBuserKeyObj.userKey);
             var totp = new Totp(bytes, step: 120);
@@ -186,16 +188,50 @@ namespace SecureDesk_WCF_Service
                     { "verified" , true },
 
                 };
+
                 //DocumentSnapshot docSnap2 = await docRef2.GetSnapshotAsync();
                 await docRef2.UpdateAsync(data2);
 
-                
+
                 verification_status.Verification_Result = true;
 
+
+                //Create Encryption key for the user
+                try
+                {
+                    AzureEncryptDecrypt azureEncryptDecrypt = new AzureEncryptDecrypt();
+                    string encryptionKeyName = await azureEncryptDecrypt.createEncryptionRSAKey();
+
+                    DocumentReference documentReference_for_keys = db.Collection("UserEncryptionKeys").Document(userOtpObj.Email_Address);
+                    Dictionary<string, object> userKeyValues = new Dictionary<string, object>()
+                 {
+                    {
+                        "userEmailAddress",userOtpObj.Email_Address
+                    },
+                    {
+                        "userKeyName",encryptionKeyName
+                    },
+                    {
+                        "keyGenerationDate",DateTime.Now.ToString()
+                    }
+                 };
+
+                    await documentReference_for_keys.SetAsync(userKeyValues);
+                }
+                catch(Exception ex)
+                {
+                    //catch the exception and throw the error on the client 
+                    CustomException customException = new CustomException();
+                    customException.errorTitleName = "Encryption Key Generation Error";
+                    customException.errorMessageToUser = ex.Message;
+                    throw new FaultException<CustomException>(customException);
+                }
                 return verification_status;
             }
+
             verification_status.Verification_Result = false;
-            return verification_status;
+
+             return verification_status;
         }
         public async Task<int> getSecurePin(string email)
         {
@@ -207,7 +243,7 @@ namespace SecureDesk_WCF_Service
                 byte[] buffer = new byte[sizeof(UInt64)];
                 cryptoRng.GetBytes(buffer);
                 var num = BitConverter.ToUInt64(buffer, 0);
-                var pin = num % 1000000; 
+                var pin = num % 1000000;
                 if (pin > 99999)
                 {
                     SecurePin = Convert.ToInt32(pin);
@@ -224,7 +260,7 @@ namespace SecureDesk_WCF_Service
             //DocumentSnapshot docSnap2 = await docRef2.GetSnapshotAsync();
             await docRef1.UpdateAsync(data1);
 
-            
+
 
             return SecurePin;
         }
@@ -268,7 +304,7 @@ namespace SecureDesk_WCF_Service
             DocumentReference docRef1 = db.Collection("User").Document(email);
             Dictionary<string, object> data1 = new Dictionary<string, object>()
                 {
-                    { "password" , hash_password[1] },                
+                    { "password" , hash_password[1] },
                     { "salt" , hash_password[0] }
 
                 };
