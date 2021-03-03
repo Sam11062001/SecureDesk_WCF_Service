@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SecureDesk_WCF_Service.Services
 {
@@ -19,6 +20,11 @@ namespace SecureDesk_WCF_Service.Services
         void shareDocument(DocumentData documentData, string sharedBy, string sharedTo);
 
         [OperationContract]
-        void getSharedDocument( string email );
+        Task<SharedDocumentData[]> getSharedDocument( string email );
+
+        [OperationContract]
+        void deleteSharedDocument(SharedDocumentData sharedDocumentData, string emailSharedTo);
+
+
     }
 }

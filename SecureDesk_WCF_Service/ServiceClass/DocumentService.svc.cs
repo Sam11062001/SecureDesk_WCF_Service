@@ -73,11 +73,11 @@ namespace SecureDesk_WCF_Service.Services
 
         
 
-        public async void addDocument(string link, string fileName)
+        public async void addDocument(string link, string fileName, string email)
         {
             Boolean connectionResult = connectToFirebase();
 
-            DocumentReference doc1 = db.Collection("UserDocuments").Document("kamaniyash811@gmail.com").Collection("MyDocuments").Document(fileName);
+            DocumentReference doc1 = db.Collection("UserDocuments").Document(email).Collection("MyDocuments").Document(fileName);
             Dictionary<string, object> data1 = new Dictionary<string, object>()
             {
                 { "fileName" , fileName },
@@ -94,7 +94,7 @@ namespace SecureDesk_WCF_Service.Services
         {
         }
 
-        public async void uploadDocument(byte[] fileByte, string fileName)
+        public async void uploadDocument(byte[] fileByte, string fileName , string email)
         {
             Stream stream = new MemoryStream(fileByte);
             var auth = new FirebaseAuthProvider(new FirebaseConfig(apiKey));
@@ -123,9 +123,15 @@ namespace SecureDesk_WCF_Service.Services
             }
             Console.WriteLine("done");
 
-            addDocument( link , fileName);
+            addDocument( link , fileName, email);
         }
 
-        
+        public void deleteDocument( string email , string fileName )
+        {
+            Boolean connectionResult = connectToFirebase();
+
+            DocumentReference doc1 = db.Collection("UserDocuments").Document(email).Collection("MyDocuments").Document(fileName);
+            doc1.DeleteAsync();
+        }
     }
 }
