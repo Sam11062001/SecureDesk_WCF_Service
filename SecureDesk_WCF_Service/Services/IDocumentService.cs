@@ -20,12 +20,15 @@ namespace SecureDesk_WCF_Service.Services
         Boolean connectToFirebase();
 
         [OperationContract]
-        void uploadDocument(byte[] fileByte, string fileName);
+        void uploadDocument(byte[] fileByte, string fileName, string email);
 
         [OperationContract]
-        void addDocument(string link, string fileName);
+        void addDocument(string link, string fileName, string email);
 
         [OperationContract]
         Task<DocumentData[]> getAllDocumnetData(string email);
+
+        [OperationContract]
+        void deleteDocument(string email, string fileName);
     }
 }

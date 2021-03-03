@@ -306,9 +306,11 @@
     <Compile Include="Models\DBDiaryData.cs" />
     <Compile Include="Models\DBDocumentData.cs" />
     <Compile Include="Models\DBQuestions.cs" />
+    <Compile Include="Models\DBSharedDocumentData.cs" />
     <Compile Include="Models\DBUserKeys.cs" />
     <Compile Include="Models\DiaryData.cs" />
     <Compile Include="Models\DocumentData.cs" />
+    <Compile Include="Models\SharedDocumentData.cs" />
     <Compile Include="Models\userKeys.cs" />
     <Compile Include="Models\OTP_Verified.cs" />
     <Compile Include="Models\Security_Question.cs" />

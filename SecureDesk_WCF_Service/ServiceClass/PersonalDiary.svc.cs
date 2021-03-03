@@ -29,7 +29,7 @@ namespace SecureDesk_WCF_Service.Services
 
         FirestoreDb db;
 
-        public async void addDiary(string link, string date, string title )
+        public async void addDiary(string link, string date, string title, string email )
         {
             Boolean connectionResult = connectToFirebase();
             string fileName = date.Replace("/", "");
@@ -120,7 +120,7 @@ namespace SecureDesk_WCF_Service.Services
             return count;
         }
 
-        public async void UploadDayThought(string date, string title, string content )
+        public async void UploadDayThought(string date, string title, string content, string email )
         {
             string fileName = date.Replace("/","");
             //fs = new FileStream(@"C:\Users\kaman\Documents\Epass.pdf", FileMode.Open);
@@ -155,7 +155,7 @@ namespace SecureDesk_WCF_Service.Services
             Console.WriteLine("Hurrraahhhhh");
             
 
-            addDiary(link, date, title);
+            addDiary(link, date, title, email);
 
             
         }

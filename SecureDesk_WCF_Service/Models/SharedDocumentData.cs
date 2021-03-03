@@ -7,7 +7,7 @@ using System.Web;
 namespace SecureDesk_WCF_Service.Models
 {
     [DataContract]
-    public class DocumentData
+    public class SharedDocumentData
     {
         [DataMember]
         public string fileName;
