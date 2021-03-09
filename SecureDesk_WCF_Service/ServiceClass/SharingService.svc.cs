@@ -28,15 +28,25 @@ namespace SecureDesk_WCF_Service.Services
 
         public Boolean connectToFirebase()
         {
-            //creating the instance of the Firebase_Configuration Class to connect to the Firebase Database 
-             string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
-            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
-
-            db = FirestoreDb.Create("deskcloud-155bf");
-            if (db != null)
-                return true;
-            else
-                return false;
+            try
+            {
+                //creating the instance of the Firebase_Configuration Class to connect to the Firebase Database 
+                string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
+                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+                db = FirestoreDb.Create("deskcloud-155bf");
+                if (db != null)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                //Catch the Throw the Fault Contract Exception
+                CustomException customException = new CustomException();
+                customException.errorTitleName = ex.Message;
+                customException.errorMessageToUser = "Cannot Get Your Account Details,Please try again Later";
+                throw new FaultException<CustomException>(customException);
+            }
         }
 
         public void deleteSharedDocument(SharedDocumentData sharedDocumentData, string emailSharedTo)
@@ -119,3 +129,5 @@ namespace SecureDesk_WCF_Service.Services
         
     }
 }
+
+

@@ -12,12 +12,12 @@ namespace SecureDesk_WCF_Service.Models
     public class UserOtpVerification
     {
 
-        private int otp;
+        private string otp;
         private string email_address;
        
 
         [MessageHeader(Name = "One Time Password for Verification")]
-        public int OTP
+        public string OTP
         {
             get;
             set;

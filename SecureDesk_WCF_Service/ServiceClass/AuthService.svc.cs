@@ -16,16 +16,18 @@ namespace SecureDesk_WCF_Service.Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession)]
     public class AuthService : IAuthService
     {
-        private readonly FirestoreDb database_configuration;
+        private  FirestoreDb database_configuration;
         AuthService()
         {
-            Firebase_Configuration config = new Firebase_Configuration();
-            database_configuration = config.connectFireStoreCloud();
+            
+            
         }
         
 
         public async Task<bool> validateLogin(AuthUser authUser)
         {
+            Firebase_Configuration config = new Firebase_Configuration();
+            database_configuration = config.connectFireStoreCloudAsync();
             bool auth_result = false;
             string pepper = System.Configuration.ConfigurationManager.AppSettings["SecureDeskPasswordPepper"];
 

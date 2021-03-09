@@ -58,20 +58,28 @@ namespace SecureDesk_WCF_Service.Services
 
         public Boolean connectToFirebase()
         {
-            //creating the instance of the Firebase_Configuration Class to connect to the Firebase Database 
-
-
-            string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
-            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
-
-            db = FirestoreDb.Create("deskcloud-155bf");
-            if (db != null)
-                return true;
-            else
-                return false;
+            try
+            {
+                //creating the instance of the Firebase_Configuration Class to connect to the Firebase Database 
+                string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
+                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+                db = FirestoreDb.Create("deskcloud-155bf");
+                if (db != null)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                //Catch the Throw the Fault Contract Exception
+                CustomException customException = new CustomException();
+                customException.errorTitleName = ex.Message;
+                customException.errorMessageToUser = "Cannot Get Your Account Details,Please try again Later";
+                throw new FaultException<CustomException>(customException);
+            }
         }
 
-        
+
 
         public async void addDocument(string link, string fileName, string email)
         {
@@ -96,12 +104,16 @@ namespace SecureDesk_WCF_Service.Services
 
         public async void uploadDocument(byte[] fileByte, string fileName , string email)
         {
+            //Get the stream object to consume the byte array
             Stream stream = new MemoryStream(fileByte);
+            //create the auth client to the firebase to access the firebase storage
             var auth = new FirebaseAuthProvider(new FirebaseConfig(apiKey));
+            //authentication to the firebase storage
             var a = await auth.SignInWithEmailAndPasswordAsync(authEmail, authPassword);
+            //get the cancellation token 
             var cancellation = new CancellationTokenSource();
-            var upload = new FirebaseStorage(
-                bucket,
+            //uploading the user document
+            var upload = new FirebaseStorage(bucket,
                 new FirebaseStorageOptions
                 {
 
@@ -111,8 +123,9 @@ namespace SecureDesk_WCF_Service.Services
                 )
                 .Child("Document")
                 .Child(fileName)
-                .PutAsync(stream, cancellation.Token);
+                .PutAsync(stream, cancellation.Token); //adding thr file asynchronously
 
+            
             try
             {
                 link = await upload;
@@ -123,7 +136,9 @@ namespace SecureDesk_WCF_Service.Services
             }
             Console.WriteLine("done");
 
+
             addDocument( link , fileName, email);
+
         }
 
         public void deleteDocument( string email , string fileName )
