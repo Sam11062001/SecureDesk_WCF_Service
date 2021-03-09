@@ -18,10 +18,10 @@ namespace SecureDesk_WCF_Service.Services
         Boolean connectToFirebase();
 
         [OperationContract]
-        void UploadDayThought( string date , string title , string content );
+        void UploadDayThought( string date , string title , string content, string email);
 
         [OperationContract]
-        void addDiary(string link, string date , string title );
+        void addDiary(string link, string date , string title, string email);
 
         [OperationContract]
         void getDiary(string link );
