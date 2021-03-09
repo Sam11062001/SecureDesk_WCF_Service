@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Google.Cloud.Firestore;
-
+using Azure.Storage.Blobs;
+using System.IO;
 namespace SecureDesk_WCF_Service
 {
     
@@ -11,8 +12,9 @@ namespace SecureDesk_WCF_Service
     {
         FirestoreDb db;
 
-        public FirestoreDb connectFireStoreCloud()
+        public FirestoreDb connectFireStoreCloudAsync()
         {
+            
             string path = AppDomain.CurrentDomain.BaseDirectory + @"deskcloud-155bf-firebase-adminsdk-htpcm-c5324a5466.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 

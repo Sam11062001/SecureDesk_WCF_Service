@@ -12,6 +12,7 @@ namespace SecureDesk_WCF_Service
 {
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the interface name "IService1" in both code and config file together.
     [ServiceContract]
+  
     public interface RegistrationService
     {
         [OperationContract]
@@ -28,16 +29,12 @@ namespace SecureDesk_WCF_Service
 
         [OperationContract]
         [FaultContract(typeof(CustomException))]
-        void sendOTP(string email);
+        Task<bool> sendOTP(string email,string userName,bool isForgetPassword);
 
         [OperationContract]
         [FaultContract(typeof(CustomException))]
         Task<OTP_Verified> verifyUser(UserOtpVerification otpObj);
-
-        [OperationContract]
-        [FaultContract(typeof(CustomException))]
-        Task<int> getSecurePin(string email);
-
+        
         [OperationContract]
         [FaultContract(typeof(CustomException))]
         Task<string> getUserQuestion(string email);
@@ -49,10 +46,20 @@ namespace SecureDesk_WCF_Service
         [OperationContract]
         [FaultContract(typeof(CustomException))]
         void resetPassword(string email, string newPassword);
+
+        [OperationContract]
+        [FaultContract(typeof(CustomException))]
+        Task<bool> isUnique(string email);
+
+        [OperationContract]
+        [FaultContract(typeof(CustomException))]
+        Task<OTP_Verified> verifyForgetPassword(UserOtpVerification otpObj);
+
+
         // TODO: Add your service operations here
     }
 
 
     // Use a data contract as illustrated in the sample below to add composite types to service operations.
-   
+
 }

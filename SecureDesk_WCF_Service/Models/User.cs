@@ -10,21 +10,27 @@ namespace SecureDesk_WCF_Service.Models
     [FirestoreData]
     public class User
     {
+        //Property 1
         [FirestoreProperty]
         public string email { get; set; }
 
+        //Property 2
         [FirestoreProperty]
         public string firstName { get; set; }
 
+        //Property 3
         [FirestoreProperty]
         public string lastName { get; set; }
 
+        //Property 4
         [FirestoreProperty]
         public string dateOfBirth { get; set; }
 
+        //Property 5
         [FirestoreProperty]
         public string password { get; set; }
 
+        //Property 6
         [FirestoreProperty]
         public int questionSelected { get; set; }
 
@@ -35,10 +41,15 @@ namespace SecureDesk_WCF_Service.Models
         public Boolean verified { get; set; }
 
         [FirestoreProperty]
-        public int securePin { get; set; }
+        public string salt { get; set; }
 
         [FirestoreProperty]
-        public string salt { get; set; }
+        public string accessPIN { get; set; }
+
+        [FirestoreProperty]
+        public string dateOfRegistration { get; set; }
+
+
       
 
 

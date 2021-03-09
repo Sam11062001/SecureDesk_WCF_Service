@@ -18,14 +18,14 @@ namespace SecureDesk_WCF_Service.Models
         private string password;
         private int question_number;
         private string question_answered;
-
+       
         [DataMember]
         public string Email_Address
         {
             get { return email_address; }
             set { email_address = value; }
         }
-
+       
         [DataMember]
         public string First_Name
         {
