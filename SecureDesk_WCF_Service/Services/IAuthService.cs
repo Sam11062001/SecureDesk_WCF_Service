@@ -13,6 +13,9 @@ namespace SecureDesk_WCF_Service.Services
     public interface IAuthService
     {
         [OperationContract]
+        [FaultContract(typeof(CustomException))]
         Task<bool> validateLogin(AuthUser authUser);
+
+        
     }
 }

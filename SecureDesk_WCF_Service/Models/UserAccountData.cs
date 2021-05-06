@@ -26,7 +26,7 @@ namespace SecureDesk_WCF_Service.Models
 
         private string SecureDeskUser;
 
-        [DataMember]
+        [DataMember(Name="UserAccountName")]
         public string Name
         {
             get { return accountName; }
