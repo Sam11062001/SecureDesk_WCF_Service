@@ -261,13 +261,13 @@ namespace SecureDesk_WCF_Service.Services
         {
         }
 
-        public async Task<DBAccountData[]> getAllAccounts(string email_Address)
+        public async Task<UserAccountData[]> getAllAccounts(string email_Address)
         {
             //connect to the database
             bool connection_result = connectToFirebase();
 
             //create the array which will be returned to the user as the output of this operation
-            DBAccountData[] dBAccountData = null;
+            UserAccountData[] dBAccountData = null;
             try
             {
                 //connection is succesfull
@@ -282,14 +282,19 @@ namespace SecureDesk_WCF_Service.Services
                     //to variable represensts the number of accounts
                     int number_of_accounts = allAccountsSnapshots.Count;
                     //create the array for the account data
-                    dBAccountData = new DBAccountData[number_of_accounts];
+                    dBAccountData = new UserAccountData[number_of_accounts];
 
                     //incremeant varibale 
                     int i = 0;
                     foreach (DocumentSnapshot snap in allAccountsSnapshots.Documents)
                     {
-                        dBAccountData[i] = new DBAccountData();
-                        dBAccountData[i] = snap.ConvertTo<DBAccountData>();
+                        DBAccountData tempData = snap.ConvertTo<DBAccountData>();
+                        dBAccountData[i] = new UserAccountData();
+                        dBAccountData[i].userEmail = email_Address;
+                        dBAccountData[i].Name = tempData.accountName;
+                        dBAccountData[i].UserName = tempData.accountUserName;
+                        dBAccountData[i].Password = tempData.accountPassword;
+                        dBAccountData[i].Password = tempData.accountPassword;
                         i++;
 
                     }
@@ -309,10 +314,10 @@ namespace SecureDesk_WCF_Service.Services
             return dBAccountData;
         }
 
-        public async Task<DBAccountData> requestDecryption(string email_Address, string accountName)
+        public async Task<UserAccountData> requestDecryption(string email_Address, string accountName)
         {
             DBAccountData dBAccountData = null;
-
+            UserAccountData data = null;
             //connect to the firestoredatabase
             bool connection_Result = connectToFirebase();
 
@@ -382,7 +387,11 @@ namespace SecureDesk_WCF_Service.Services
                                 dBAccountData.accountUserName = decrypted_username_plaintext;
                                 dBAccountData.accountPassword = decrypted_password_plaintext;
 
-
+                                data = new UserAccountData();
+                                data.userEmail = email_Address;
+                                data.Name = dBAccountData.accountName;
+                                data.UserName = dBAccountData.accountUserName;
+                                data.Password = dBAccountData.accountPassword;
 
                             }
                         }
@@ -397,7 +406,7 @@ namespace SecureDesk_WCF_Service.Services
                 throw new FaultException<CustomException>(customException);
 
             }
-            return dBAccountData;
+            return data;
         }
 
         public async Task<bool> updateAccount(UserAccountData userAccountData)

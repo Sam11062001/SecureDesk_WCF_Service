@@ -34,7 +34,7 @@ namespace SecureDesk_WCF_Service.Services
         {
             Boolean connectionResult = connectToFirebase();
             string fileName = date.Replace("/", "");
-            DocumentReference doc1 = db.Collection("UserDiaries").Document("kamaniyash811@gmail.com").Collection("MyDiary").Document(fileName);
+            DocumentReference doc1 = db.Collection("UserDiaries").Document(email).Collection("MyDiary").Document(fileName);
             Dictionary<string, object> data1 = new Dictionary<string, object>()
             {
                 { "date" , date },
@@ -129,7 +129,7 @@ namespace SecureDesk_WCF_Service.Services
             return count;
         }
 
-        public async void UploadDayThought(string date, string title, string content, string email )
+        public async void UploadDayThought(string date, string title, string content, string email)
         {
             string fileName = date.Replace("/","");
             //fs = new FileStream(@"C:\Users\kaman\Documents\Epass.pdf", FileMode.Open);

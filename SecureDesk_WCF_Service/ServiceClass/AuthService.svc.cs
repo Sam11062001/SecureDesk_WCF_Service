@@ -26,47 +26,58 @@ namespace SecureDesk_WCF_Service.Services
 
         public async Task<bool> validateLogin(AuthUser authUser)
         {
-            Firebase_Configuration config = new Firebase_Configuration();
-            database_configuration = config.connectFireStoreCloudAsync();
             bool auth_result = false;
-            string pepper = System.Configuration.ConfigurationManager.AppSettings["SecureDeskPasswordPepper"];
-
-            //if the database connection is successfull
-            if (database_configuration != null)
+            try
             {
-                //getting the reference to the collection and then to the specific user
-                DocumentReference documentReference = database_configuration.Collection("User").Document(authUser.User_Auth_Email);
+                Firebase_Configuration config = new Firebase_Configuration();
+                database_configuration = config.connectFireStoreCloudAsync();
+               
+                string pepper = System.Configuration.ConfigurationManager.AppSettings["SecureDeskPasswordPepper"];
 
-                //get the snapshot of the user 
-                DocumentSnapshot documentSnapshot = await documentReference.GetSnapshotAsync();
-
-                //convert the obtained snapshot into the User type object .
-                User validUser = documentSnapshot.ConvertTo<User>();
-
-                //if the user is found then check the credentials
-                if (validUser != null)
+                //if the database connection is successfull
+                if (database_configuration != null)
                 {
-                    //generate the hash password using the SHA512 algorithm
-                    string authUserHashedpassword = Password.generateSHA512Hash(authUser.User_Auth_Password, validUser.salt, pepper);
+                    //getting the reference to the collection and then to the specific user
+                    DocumentReference documentReference = database_configuration.Collection("User").Document(authUser.User_Auth_Email);
 
-                    //pass the current computer password and the valid user passsword
-                    auth_result = BC.Verify(authUserHashedpassword, validUser.password);
+                    //get the snapshot of the user 
+                    DocumentSnapshot documentSnapshot = await documentReference.GetSnapshotAsync();
 
-                    //return the result of the authentication to the client 
-                    return auth_result;
+                    //convert the obtained snapshot into the User type object .
+                    User validUser = documentSnapshot.ConvertTo<User>();
+
+                    //if the user is found then check the credentials
+                    if (validUser != null)
+                    {
+                        //generate the hash password using the SHA512 algorithm
+                        string authUserHashedpassword = Password.generateSHA512Hash(authUser.User_Auth_Password, validUser.salt, pepper);
+
+                        //pass the current computer password and the valid user passsword
+                        auth_result = BC.Verify(authUserHashedpassword, validUser.password);
+
+                        //return the result of the authentication to the client 
+                        return auth_result;
+                    }
+                    else
+                    {
+                        //that means the user is not found in the database so return the false
+                        return auth_result;
+                    }
                 }
                 else
                 {
-                    //that means the user is not found in the database so return the false
+                    //error in the database connection
                     return auth_result;
                 }
-            }
-            else
-            {
-                //error in the database connection
-                return auth_result;
-            }
 
+            }
+            catch(Exception ex)
+            {
+                CustomException customrException = new CustomException();
+                customrException.errorMessageToUser = "Cannot Login, Please Try Again Later";
+                customrException.errorTitleName = "Login Error";
+            }
+            return auth_result;
         }
     }
 }

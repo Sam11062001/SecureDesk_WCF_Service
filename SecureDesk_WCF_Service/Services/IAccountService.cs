@@ -30,12 +30,12 @@ namespace SecureDesk_WCF_Service.Services
         //This Operation retuns all the current account from the database
         [OperationContract]
         [FaultContract(typeof(CustomException))]
-        Task<DBAccountData[]> getAllAccounts(string email_Address);
+        Task<UserAccountData[]> getAllAccounts(string email_Address);
 
         //This operation performs the decryption for the requested account
         [OperationContract]
         [FaultContract(typeof(CustomException))]
-        Task<DBAccountData> requestDecryption(string email_Address, string accountName);
+        Task<UserAccountData> requestDecryption(string email_Address, string accountName);
 
         
     }
