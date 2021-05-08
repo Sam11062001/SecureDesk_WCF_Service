@@ -150,7 +150,7 @@ namespace SecureDesk_WCF_Service.Services
                 }
                 )
                 .Child("Diary")
-                .Child(fileName+".pdf")
+                .Child(fileName+".txt")
                 .PutAsync(stream, cancellation.Token);
 
             try
